@@ -26,6 +26,7 @@ import html2text
 
 from pypump import WebPump, Client, JSONStore
 from pypump.models.media import (Image, Video, Audio)
+from pypump.models.note import Note
 
 class Output(object):
     """ Handle output of for program to provide uniform messages. """
@@ -529,6 +530,25 @@ def p_post_note(p, message, editor, title, to, cc, echovar):
     if echovar in ['id', 'url']:
         p.output.log(getattr(note, echovar))
 
+@p_post.command('delete', short_help='Delete alle posted contents.')
+@pass_p
+def p_post_delete(p):
+    feed = p.pump.me.outbox
+
+    for activity in feed.items(limit=None):
+        item = activity.obj
+
+        if isinstance(item, Note):
+            if item.deleted:
+                print('empty:  '+item.id)
+            else:
+                try:
+                    item.delete()
+                    print('delete: '+item.id)
+                except:
+                    print('failed: '+item.id)
+        else:
+            print('ignore: '+item.id)
 
 @cli.command('follow')
 @pass_p
